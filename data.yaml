@@ -1,0 +1,6 @@
+path: C:/Users/Manhab Zafar/Desktop/DIP-Project/yolov5/dataset
+train: images/train
+val: images/val
+
+nc: 20
+names: ['Avocado', 'Brocolli', 'Cabbage', 'Cantaloupe', 'Capsicum', 'Cauliflower', 'Cucumber', 'Dates', 'Fig', 'Ginger', 'Lemon', 'Lychee', 'Peach', 'Pear', 'Potato', 'Tomato', 'apples', 'banana', 'blackberry', 'orange']

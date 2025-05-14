@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Food Detection & Nutrition Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary: #2dd4bf;
+            --primary-dark: #0d9488;
+            --secondary: #6366f1;
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --success: #22c55e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .upload-container {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .mode-button {
+            background-color: white;
+            color: var(--dark);
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 250px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .mode-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mode-button.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+        
+        .icon-container {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            margin: 2rem auto;
+            max-width: 600px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(45, 212, 191, 0.05);
+        }
+        
+        .upload-area .icon {
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-area h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        .upload-area p {
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .upload-button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        #imagePreview {
+            margin-top: 2rem;
+            display: none;
+            text-align: center;
+        }
+        
+        #previewImage {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .analyze-button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1.5rem;
+            display: none;
+        }
+        
+        .analyze-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .results-container {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1rem;
+        }
+        
+        .food-item {
+            display: flex;
+            align-items: center;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background-color: #f8fafc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .food-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .food-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            margin-right: 1.5rem;
+        }
+        
+        .food-details {
+            flex: 1;
+        }
+        
+        .food-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .confidence {
+            color: var(--success);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .nutrition-facts {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .nutrition-item {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nutrition-item span {
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mode-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .mode-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AI Food Detection & Nutrition Analyzer</h1>
+        <p class="subtitle">Upload food images to get nutrition information in seconds</p>
+    </header>
+    
+    <div class="container">
+        <div class="upload-container">
+            <h2>Choose Detection Mode</h2>
+            
+            <div class="mode-selector">
+                <div class="mode-button active" id="singleMode">
+                    <div class="icon-container">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    Single Item Detection
+                </div>
+                <div class="mode-button" id="multiMode">
+                    <div class="icon-container">
+                        <i class="fas fa-hamburger"></i>
+                        <i class="fas fa-apple-alt"></i>
+                    </div>
+                    Multiple Items Detection
+                </div>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept="image/*">
+                <div class="icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Drag & Drop or Click to Upload</h3>
+                <p>Supported formats: JPG, PNG, WEBP</p>
+                <button class="upload-button">Select Image</button>
+            </div>
+            
+            <div id="imagePreview">
+                <img id="previewImage" src="/api/placeholder/600/400" alt="Food Preview">
+                <button class="analyze-button" id="analyzeBtn">
+                    <i class="fas fa-search"></i> Analyze Food
+                </button>
+            </div>
+            
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Analyzing your food image...</p>
+            </div>
+        </div>
+        
+        <div class="results-container" id="resultsContainer">
+            <div class="results-header">
+                <h2>Detection Results</h2>
+                <span id="detectionMode">Single Item</span>
+            </div>
+            
+            <div id="resultsContent">
+                <!-- Results will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        © 2025 AI Food Detection & Nutrition Analyzer | Digital Image Processing Project
+    </div>
+    
+    <script>
+        // DOM Elements
+        const singleModeBtn = document.getElementById('singleMode');
+        const multiModeBtn = document.getElementById('multiMode');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const detectionModeSpan = document.getElementById('detectionMode');
+        const resultsContent = document.getElementById('resultsContent');
+        
+        // Current mode
+        let currentMode = 'single';
+        
+        // Event Listeners
+        singleModeBtn.addEventListener('click', () => {
+            setMode('single');
+        });
+        
+        multiModeBtn.addEventListener('click', () => {
+            setMode('multi');
+        });
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Handle file upload
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Handle drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = ViewTransition(--primary);
+            uploadArea.style.backgroundColor = 'rgba(45, 212, 191, 0.1)';
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#cbd5e1';
+            uploadArea.style.backgroundColor = 'transparent';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#cbd5e1';
+            uploadArea.style.backgroundColor = 'transparent';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect(e);
+            }
+        });
+        
+        // Analyze button
+        analyzeBtn.addEventListener('click', analyzeImage);
+        
+        // Functions
+        function setMode(mode) {
+            currentMode = mode;
+            
+            if (mode === 'single') {
+                singleModeBtn.classList.add('active');
+                multiModeBtn.classList.remove('active');
+                detectionModeSpan.textContent = 'Single Item';
+            } else {
+                singleModeBtn.classList.remove('active');
+                multiModeBtn.classList.add('active');
+                detectionModeSpan.textContent = 'Multiple Items';
+            }
+            
+            // Reset UI
+            resetUI();
+        }
+        
+        function handleFileSelect(e) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            // Check if file is an image
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            // Display preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                imagePreview.style.display = 'block';
+                analyzeBtn.style.display = 'inline-block';
+                
+                // Hide results if visible
+                resultsContainer.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function analyzeImage() {
+            // Show loading
+            loadingIndicator.style.display = 'block';
+            analyzeBtn.style.display = 'none';
+            
+            // Simulate API call/processing delay
+            setTimeout(() => {
+                loadingIndicator.style.display = 'none';
+                showResults();
+            }, 2000);
+        }
+        
+        function showResults() {
+            resultsContainer.style.display = 'block';
+            
+            // Clear previous results
+            resultsContent.innerHTML = '';
+            
+            if (currentMode === 'single') {
+                // Show single item result
+                const singleItem = generateSingleItem();
+                resultsContent.innerHTML = singleItem;
+            } else {
+                // Show multiple items results
+                const multiItems = generateMultipleItems();
+                resultsContent.innerHTML = multiItems;
+            }
+        }
+        
+        function resetUI() {
+            imagePreview.style.display = 'none';
+            analyzeBtn.style.display = 'none';
+            loadingIndicator.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            fileInput.value = '';
+        }
+        
+        // Sample data generators
+        function generateSingleItem() {
+            return `
+                <div class="food-item">
+                    <img class="food-image" src="/api/placeholder/80/80" alt="Apple">
+                    <div class="food-details">
+                        <div class="food-name">Apple</div>
+                        <div class="confidence">Confidence: 98.5%</div>
+                        <div class="nutrition-facts">
+                            <div class="nutrition-item">Calories: <span>52 kcal</span></div>
+                            <div class="nutrition-item">Carbs: <span>14g</span></div>
+                            <div class="nutrition-item">Protein: <span>0.3g</span></div>
+                            <div class="nutrition-item">Fat: <span>0.2g</span></div>
+                            <div class="nutrition-item">Fiber: <span>2.4g</span></div>
+                            <div class="nutrition-item">Sugar: <span>10.3g</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateMultipleItems() {
+            return `
+                <div class="food-item">
+                    <img class="food-image" src="/api/placeholder/80/80" alt="Burger">
+                    <div class="food-details">
+                        <div class="food-name">Hamburger</div>
+                        <div class="confidence">Confidence: 95.2%</div>
+                        <div class="nutrition-facts">
+                            <div class="nutrition-item">Calories: <span>354 kcal</span></div>
+                            <div class="nutrition-item">Carbs: <span>27g</span></div>
+                            <div class="nutrition-item">Protein: <span>20g</span></div>
+                            <div class="nutrition-item">Fat: <span>17g</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="food-item">
+                    <img class="food-image" src="/api/placeholder/80/80" alt="French Fries">
+                    <div class="food-details">
+                        <div class="food-name">French Fries</div>
+                        <div class="confidence">Confidence: 93.7%</div>
+                        <div class="nutrition-facts">
+                            <div class="nutrition-item">Calories: <span>312 kcal</span></div>
+                            <div class="nutrition-item">Carbs: <span>41g</span></div>
+                            <div class="nutrition-item">Protein: <span>3.4g</span></div>
+                            <div class="nutrition-item">Fat: <span>15g</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="food-item">
+                    <img class="food-image" src="/api/placeholder/80/80" alt="Soda">
+                    <div class="food-details">
+                        <div class="food-name">Soda Drink</div>
+                        <div class="confidence">Confidence: 97.1%</div>
+                        <div class="nutrition-facts">
+                            <div class="nutrition-item">Calories: <span>139 kcal</span></div>
+                            <div class="nutrition-item">Carbs: <span>39g</span></div>
+                            <div class="nutrition-item">Sugar: <span>39g</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e901444823de4f',t:'MTc0NzA0MzM1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
